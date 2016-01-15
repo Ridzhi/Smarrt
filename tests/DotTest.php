@@ -1,7 +1,6 @@
 <?php
 
-
-use Arress\Dot;
+use Smarrt\Dot;
 
 class DotTest extends PHPUnit_Framework_TestCase
 {

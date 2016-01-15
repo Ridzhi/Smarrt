@@ -1,7 +1,6 @@
 <?php
 
-namespace Arress;
-
+namespace Smarrt;
 
 class Dot
 {
