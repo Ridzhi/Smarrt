@@ -1,9 +1,9 @@
 {
-    "name": "ridzhi/arress",
-    "description": "Array accessor using dot notation",
+    "name": "ridzhi/smarrt",
+    "description": "Smart array access",
     "type": "library",
     "license": "MIT",
-    "homepage": "http://github.com/Ridzhi/Arress",
+    "homepage": "http://github.com/Ridzhi/Smarrt",
     "authors": [
         {
             "name": "Danila Ridzhi",
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Arress\\": ["src/"]
+            "Smarrt\\": ["src/"]
         }
     }
 }
