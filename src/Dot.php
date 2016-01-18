@@ -65,12 +65,7 @@ class Dot
         $current = $value;
     }
 
-    public function has($key)
-    {
-
-    }
-
-    public function remove()
+    public function remove($key)
     {
 
     }
