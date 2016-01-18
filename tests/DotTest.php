@@ -111,6 +111,38 @@ class DotTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $actual);
     }
 
+    public function testRemoveAssocKey()
+    {
+        $expected = $this->data;
+        $this->obj->remove('users.admin.root');
+        unset($expected['users']['admin']['root']);
+        $this->assertEquals($expected, $this->data);
+    }
+
+    public function testRemoveIndexKey()
+    {
+        $expected = $this->data;
+        $this->obj->remove('0.1.1');
+        unset($expected[0][1][1]);
+        $this->assertEquals($expected, $this->data);
+    }
+
+    public function testRemoveAssocIndexKey()
+    {
+        $expected = $this->data;
+        $this->obj->remove('users.admin.root.1');
+        unset($expected['users']['admin']['root'][1]);
+        $this->assertEquals($expected, $this->data);
+    }
+
+    public function testRemoveNotExistsKey()
+    {
+        $expected = $this->data;
+        $this->obj->remove('users.some_not_exists');
+        unset($expected['users']['some_not_exists']);
+        $this->assertEquals($expected, $this->data);
+    }
+
     /**
      * @dataProvider parseKeyProvider
      */

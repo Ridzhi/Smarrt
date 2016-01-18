@@ -67,7 +67,23 @@ class Dot
 
     public function remove($key)
     {
+        $segments = self::parseKey($key);
+        $current = &$this->data;
+        $length = count($segments);
 
+        while ($length-- > 1) {
+            $k = array_shift($segments);
+
+            if (!(is_array($current) && array_key_exists($k, $current))) {
+                return;
+            }
+
+            $current = &$current[$k];
+        }
+
+        if (is_array($current) && array_key_exists($segments[0], $current)) {
+            unset($current[$segments[0]]);
+        }
     }
 
     protected static function parseKey($key)
