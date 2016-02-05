@@ -1,6 +1,7 @@
 {
     "name": "ridzhi/smarrt",
     "description": "Smart array access",
+    "version": "1.0.0",
     "type": "library",
     "license": "MIT",
     "homepage": "http://github.com/Ridzhi/Smarrt",
