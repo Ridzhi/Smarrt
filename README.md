@@ -1,4 +1,4 @@
-#Smarrt - smart array access.
+#Smarrt - smart arrays.
 
 ##Dot-Notation access api
 
