@@ -2,45 +2,55 @@
 
 namespace Smarrt;
 
-class Dot
+class Dot implements \ArrayAccess
 {
 
     const SEPARATOR = '.';
 
     protected $data;
 
-    private function __construct(array & $data)
+    public function __construct(array $data)
     {
-        $this->data = &$data;
+        $this->data = $data;
     }
 
-    public static function with(array & $data)
+    public function __debugInfo()
     {
-        return new self($data);
+        return $this->data;
     }
 
-    public function get($key, $default = null)
+    public function __toString()
     {
-        $segments = self::parseKey($key);
+        return (string)var_export($this->data);
+    }
+
+    public function offsetExists($offset)
+    {
+        return $this->offsetGet($offset) !== null;
+    }
+
+    public function offsetGet($offset)
+    {
+        $segments = self::parseOffset($offset);
         $current = $this->data;
-        $length = count($segments);
 
-        while ($length-- > 0) {
-            $k = array_shift($segments);
+        while (($k = array_shift($segments)) !== null) {
 
-            if (is_array($current) && array_key_exists($k, $current)) {
+            if ($this->keyExists($k, $current)) {
                 $current = $current[$k];
             } else {
-                return $default;
+                return null;
             }
+
         }
 
         return $current;
     }
 
-    public function set($key, $value)
+
+    public function offsetSet($offset, $value)
     {
-        $segments = self::parseKey($key);
+        $segments = self::parseOffset($offset);
         $current = &$this->data;
         $length = count($segments);
 
@@ -59,40 +69,44 @@ class Dot
                 $scalarKey = implode('.', array_slice($segments, 0, --$i));
                 throw new \InvalidArgumentException(sprintf('invalid key, %s is scalar, expected array', $scalarKey));
             }
-
         }
 
         $current = $value;
     }
 
-    public function remove($key)
+    public function offsetUnset($offset)
     {
-        $segments = self::parseKey($key);
+        $segments = self::parseOffset($offset);
         $current = &$this->data;
         $length = count($segments);
 
         while ($length-- > 1) {
             $k = array_shift($segments);
 
-            if (!(is_array($current) && array_key_exists($k, $current))) {
+            if (!$this->keyExists($k, $current)) {
                 return;
             }
 
             $current = &$current[$k];
         }
 
-        if (is_array($current) && array_key_exists($segments[0], $current)) {
+        if ($this->keyExists($segments[0], $current)) {
             unset($current[$segments[0]]);
         }
     }
 
-    protected static function parseKey($key)
+    protected function keyExists($key, $array)
     {
-        if ($key === '') {
+        return is_array($array) && array_key_exists($key, $array);
+    }
+
+    protected static function parseOffset($offset)
+    {
+        if ($offset === '') {
             return [];
         }
 
-        return explode(self::SEPARATOR, $key);
+        return explode(self::SEPARATOR, $offset);
     }
 
 }

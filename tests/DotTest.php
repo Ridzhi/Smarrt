@@ -13,8 +13,11 @@ class DotTest extends PHPUnit_Framework_TestCase
     /**
      * @var Dot
      */
-    protected $obj;
+    protected $dot;
 
+    /**
+     * @var array
+     */
     protected $data;
 
     public static function setUpBeforeClass()
@@ -41,127 +44,171 @@ class DotTest extends PHPUnit_Framework_TestCase
             ]
         ];
 
-        $this->obj = Dot::with($this->data);
+        $this->dot = new Dot($this->data);
     }
 
     public function testGetAssocKey()
     {
-        $actual = $this->obj->get('users.admin.root');
+        $actual = $this->dot['users.admin.root'];
         $this->assertEquals($this->data['users']['admin']['root'], $actual);
     }
 
     public function testGetIndexKey()
     {
-        $actual = $this->obj->get('0.1.1');
+        $actual = $this->dot['0.1.1'];
         $this->assertEquals($this->data[0][1][1], $actual);
     }
 
     public function testGetAssocIndexKey()
     {
-        $actual = $this->obj->get('users.admin.1');
+        $actual = $this->dot['users.admin.1'];
         $this->assertEquals($this->data['users']['admin'][1], $actual);
     }
 
-    public function testGetDefault()
+    public function testNotExists()
     {
-        $actual = $this->obj->get('users.some_not_exists', 'default');
-        $this->assertEquals('default', $actual);
+        $actual = $this->dot['users.some_not_exists'];
+        $this->assertEquals(null, $actual);
     }
 
     public function testSetAssocKey()
     {
         $expected = $this->data;
-        $this->obj->set('users.admin.root', 'root_upd');
+        $this->dot['users.admin.root'] = 'root_upd';
         $expected['users']['admin']['root'] = 'root_upd';
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testSetIndexKey()
     {
         $expected = $this->data;
-        $this->obj->set('0.1.1', 'Katerina_upd');
+        $this->dot['0.1.1'] = 'Katerina_upd';
         $expected[0][1][1] = 'Katerina_upd';
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testSetAssocIndexKey()
     {
         $expected = $this->data;
-        $this->obj->set('users.admin.root.1', 'root_upd');
+        $this->dot['users.admin.root.1'] = 'root_upd';
         $expected['users']['admin']['root'][1] = 'root_upd';
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testSetIfKeyNotExists()
     {
         $expected = $this->data;
-        $this->obj->set('users.moderator.male.2', 'moder');
+        $this->dot['users.moderator.male.2'] = 'moder';
         $expected['users']['moderator'] = [];
         $expected['users']['moderator']['male'] = [];
         $expected['users']['moderator']['male'][2] = 'moder';
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testSetIfKeyNotExistsForEmpty()
     {
         $expected = $actual = [];
-        Dot::with($actual)->set('users.moderator', 'moder');
+        $dot = new Dot($actual);
+        $dot['users.moderator'] = 'moder';
         $expected['users'] = [];
         $expected['users']['moderator'] = 'moder';
-        $this->assertEquals($expected, $actual);
+        $this->assertEqualsDot($expected, $dot);
     }
 
     public function testRemoveAssocKey()
     {
         $expected = $this->data;
-        $this->obj->remove('users.admin.root');
+        unset($this->dot['users.admin.root']);
         unset($expected['users']['admin']['root']);
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testRemoveIndexKey()
     {
         $expected = $this->data;
-        $this->obj->remove('0.1.1');
+        unset($this->dot['0.1.1']);
         unset($expected[0][1][1]);
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testRemoveAssocIndexKey()
     {
         $expected = $this->data;
-        $this->obj->remove('users.admin.root.1');
+        unset($this->dot['users.admin.root.1']);
         unset($expected['users']['admin']['root'][1]);
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     public function testRemoveNotExistsKey()
     {
         $expected = $this->data;
-        $this->obj->remove('users.some_not_exists');
+        unset($this->dot['users.some_not_exists']);
         unset($expected['users']['some_not_exists']);
-        $this->assertEquals($expected, $this->data);
+        $this->assertEqualsDot($expected);
     }
 
     /**
-     * @dataProvider parseKeyProvider
+     * @param $array
+     * @param $key
+     * @param $expected
+     *
+     * @dataProvider keyExistsProvider
      */
-    public function testParseKey($key, $expected)
+    public function testKeyExists($array, $key, $expected)
     {
-        $method = self::$inst->getMethod('parseKey');
+        $method = self::$inst->getMethod('keyExists');
         $method->setAccessible(true);
-        $actual = $method->invoke(null, $key);
+        $actual = $method->invoke(self::$inst->newInstanceWithoutConstructor(), $key, $array);
         $this->assertEquals($expected, $actual);
     }
 
-    public function parseKeyProvider()
+    /**
+     * @param $offset
+     * @param $expected
+     *
+     * @dataProvider parseOffsetProvider
+     */
+    public function testParseOffset($offset, $expected)
+    {
+        $method = self::$inst->getMethod('parseOffset');
+        $method->setAccessible(true);
+        $actual = $method->invoke(null, $offset);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function keyExistsProvider()
+    {
+        return [
+            'scalar' => ['scalar', 'node1', false],
+            'array_with_exists' => [['package' => 'Smarrt'], 'package', true],
+            'array_with_not_exists' => [['package' => 'Smarrt'], 'version', false]
+        ];
+    }
+
+    public function parseOffsetProvider()
     {
         return [
             'empty' => ['', []],
             'one' => ['users', ['users']],
             'few' => ['users.admin.root', ['users', 'admin', 'root']],
-            'withIndex' => ['users.0.admin.0.1', ['users', '0', 'admin', '0', '1']]
+            'with_index' => ['users.0.admin.0.1', ['users', '0', 'admin', '0', '1']]
         ];
+    }
+
+    protected function assertEqualsDot($expected, $dot = null)
+    {
+        if ($dot === null) {
+            $dot = $this->dot;
+        }
+
+        $this->assertEquals($expected, $this->getDotValue($dot));
+    }
+
+    protected function getDotValue(Dot $dot)
+    {
+        $prop = self::$inst->getProperty('data');
+        $prop->setAccessible(true);
+        return $prop->getValue($dot);
     }
 
 }
